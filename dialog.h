@@ -31,7 +31,7 @@ private slots:
      void processStarted();
      void encodingFinished();
      void on_fileOpenButton_clicked();
-     void on_playInputButton_clicked();
+     //void on_playInputButton_clicked();
      void on_playOutputButton_clicked();
      void crearComandos(QStringList nombreFicheros);
 

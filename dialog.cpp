@@ -188,14 +188,14 @@ void Dialog::on_fileOpenButton_clicked()
     */
 }
 
-void Dialog::on_playInputButton_clicked()
-{
-    QString program = "C:/FFmpeg/bin/ffplay";
-    QStringList arguments;
-    QString input = ui->fromLineEdit->text();
-    arguments << input;
-    mInputPlayProcess->start(program, arguments);
-}
+//void Dialog::on_playInputButton_clicked()
+//{
+//    QString program = "C:/FFmpeg/bin/ffplay";
+//    QStringList arguments;
+//    QString input = ui->fromLineEdit->text();
+//    arguments << input;
+//    mInputPlayProcess->start(program, arguments);
+//}
 
 void Dialog::on_playOutputButton_clicked()
 {

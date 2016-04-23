@@ -130,13 +130,6 @@
    <item row="5" column="0" colspan="2">
     <layout class="QHBoxLayout" name="horizontalLayout_3">
      <item>
-      <widget class="QPushButton" name="playInputButton">
-       <property name="text">
-        <string>Play Input</string>
-       </property>
-      </widget>
-     </item>
-     <item>
       <widget class="QPushButton" name="playOutputButton">
        <property name="text">
         <string>Ver Video</string>
