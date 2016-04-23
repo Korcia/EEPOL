@@ -11,6 +11,7 @@
 #include <QFileDialog>
 #include <QThread>
 #include <QFileInfo>
+#include <QFile>
 
 
 Dialog::Dialog(QWidget *parent) :
@@ -69,13 +70,13 @@ void Dialog::on_startButton_clicked()
                      tr("ffmpeg"),tr("Input file not specified"));
         return;
     }
-    QString output = ui->toLineEdit->text();
+    /*QString output = ui->toLineEdit->text();
     if(output.isEmpty()) {
         qDebug() << "No output";
         QMessageBox::information(this,
                      tr("ffmpeg"),tr("Nombre de fichero destino no especificado"));
         return;
-    }
+    }*/
 
     QString fileName = ui->toLineEdit->text();
     qDebug() << "output file check " << fileName;
@@ -144,11 +145,17 @@ void Dialog::crearComandos(QStringList nombreFicheros)
 {
     foreach (QString var, nombreFicheros) {
         QFileInfo info(var);
+        //qDebug() << "Nombre del fichero " << var;
+        //QDir r;
+        //r.rename(var, var.replace(" ", "_"));
+        QString origen = "\"" + var + "\"";
         info.setCaching(false);
         QString base = info.completeBaseName();
+        base.replace(" ", "_");
+        qDebug() << "Nombre de origen del fichero " << origen;
         //delete info;
         QString tmp1 = "ffmpeg -f h264 -i ";
-        QString tmp2 = tmp1 + var;
+        QString tmp2 = tmp1 + origen;
         QString tmp3 = " -s 640x480 -crf 14 ";
         QString tmp4 = DIRDESTINO + base + ".mp4";
         QString arg = tmp2 + tmp3 + tmp4;
