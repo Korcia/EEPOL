@@ -18,3 +18,6 @@ SOURCES += main.cpp\
 HEADERS  += dialog.h
 
 FORMS    += dialog.ui
+
+QT += widgets
+RESOURCES += resources.qrc

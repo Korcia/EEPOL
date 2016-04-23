@@ -9,6 +9,8 @@
 #include <QMessageBox>
 #include <QFileInfo>
 #include <QFileDialog>
+#include <QThread>
+#include <QFileInfo>
 
 
 Dialog::Dialog(QWidget *parent) :
@@ -20,11 +22,18 @@ Dialog::Dialog(QWidget *parent) :
     // Play button for output - initially disabled
     ui->playOutputButton->setEnabled(false);
 
+    //Carpeta destino por defecto y modo sólo lectura
+    ui->toLineEdit->setPlaceholderText(DIRDESTINO);
+    ui->toLineEdit->setReadOnly(true);
+
     // Create three processes
     // 1.transcoding, 2.input play 3.output play
     mTranscodingProcess = new QProcess(this);
     mInputPlayProcess = new QProcess(this);
     mOutputPlayProcess = new QProcess(this);
+
+    //Creo 4 procesos más en caso de necesitarlos
+    //mTranscodingProcess2 = new QProcess(this);
 
     connect(mTranscodingProcess, SIGNAL(started()), this, SLOT(processStarted()));
 
@@ -42,6 +51,8 @@ void Dialog::processStarted()
     qDebug() << "processStarted()";
 }
 
+const QString Dialog::DIRDESTINO = "/home/jose/";
+
 // conversion start
 void Dialog::on_startButton_clicked()
 {
@@ -49,7 +60,7 @@ void Dialog::on_startButton_clicked()
     QString program = "/usr/bin/ffmpeg";
 
     QStringList arguments;
-    QString argumentos;
+    QString arg;
 
     QString input = ui->fromLineEdit->text();
     if(input.isEmpty()) {
@@ -62,7 +73,7 @@ void Dialog::on_startButton_clicked()
     if(output.isEmpty()) {
         qDebug() << "No output";
         QMessageBox::information(this,
-                     tr("ffmpeg"),tr("Output file not specified"));
+                     tr("ffmpeg"),tr("Nombre de fichero destino no especificado"));
         return;
     }
 
@@ -71,8 +82,8 @@ void Dialog::on_startButton_clicked()
     qDebug() << "QFile::exists(fileName) = " << QFile::exists(fileName);
     if (QFile::exists(fileName)) {
          if (QMessageBox::question(this, tr("ffmpeg"),
-                    tr("There already exists a file called %1 in "
-                    "the current directory. Overwrite?").arg(fileName),
+                    tr("Existe un fichero %1 en "
+                    "el directorio destino. ¿Sobreescribir?").arg(fileName),
                     QMessageBox::Yes|QMessageBox::No, QMessageBox::No)
              == QMessageBox::No)
              return;
@@ -82,20 +93,14 @@ void Dialog::on_startButton_clicked()
          }
      }
 
-    //arguments << "-i" << input << output;
-    argumentos = "-f h264 -i " + input + " -s 640x480 -crf 14 " + output;
+    //qDebug() << argumentos;
 
-    qDebug() << argumentos;
+    if (!mComandos.isEmpty()) {
+        arg = mComandos.dequeue();
+    }
 
     mTranscodingProcess->setProcessChannelMode(QProcess::MergedChannels);
-    //mTranscodingProcess->start(program, arguments);
-    //process->start(program, QStringList() << folder);
-    //mTranscodingProcess->start(program, QStringList() << argumentos);
-    mTranscodingProcess->start("ffmpeg -f h264 -i /home/jose/Documents/RR35_Interno_19_20160420_204500.dav -s 640x480 -crf 14 /home/jose/camara2.mp4");
-    //mTranscodingProcess->waitForFinished();
-    //mTranscodingProcess->close();
-    //process.waitForFinished();
-    //process.close();
+    mTranscodingProcess->start(arg);
 }
 
 void Dialog::readyReadStandardOutput()
@@ -103,7 +108,7 @@ void Dialog::readyReadStandardOutput()
     mOutputString.append(mTranscodingProcess->readAllStandardOutput());
     ui->textEdit->setText(mOutputString);
 
-    // put the slider at the bottom
+    // poner el slider abajo
     ui->textEdit->verticalScrollBar()
             ->setSliderPosition(
                 ui->textEdit->verticalScrollBar()->maximum());
@@ -111,7 +116,7 @@ void Dialog::readyReadStandardOutput()
 
 void Dialog::encodingFinished()
 {
-    // Set the encoding status by checking output file's existence
+    // Resultado del proceso by checking output file's existence
     QString fileName = ui->toLineEdit->text();
 
     if (QFile::exists(fileName)) {
@@ -124,11 +129,53 @@ void Dialog::encodingFinished()
         ui->transcodingStatusLabel
                 ->setText("Resultado Conversión: Error!");
     }
+
+    if (mComandos.isEmpty()) {
+        mTranscodingProcess->close();
+    } else {
+        QString arg = mComandos.dequeue();
+        mTranscodingProcess->start(arg);
+    }
+
+}
+
+//Compongo las command lines que llaman a ffmpeg con los nombres de los ficheros
+void Dialog::crearComandos(QStringList nombreFicheros)
+{
+    foreach (QString var, nombreFicheros) {
+        QFileInfo info(var);
+        info.setCaching(false);
+        QString base = info.completeBaseName();
+        //delete info;
+        QString tmp1 = "ffmpeg -f h264 -i ";
+        QString tmp2 = tmp1 + var;
+        QString tmp3 = " -s 640x480 -crf 14 ";
+        QString tmp4 = DIRDESTINO + base + ".mp4";
+        QString arg = tmp2 + tmp3 + tmp4;
+
+        mComandos.enqueue(arg);
+    }
+
 }
 
 // Browse... button clicked - this is for input file
 void Dialog::on_fileOpenButton_clicked()
 {
+    QFileDialog dialogo(this);
+    dialogo.setDirectory(QDir::homePath());
+    dialogo.setFileMode(QFileDialog::ExistingFiles);
+    dialogo.setNameFilter(trUtf8("Videos (*.dav *.h264)"));
+    QString nombreFichero;
+    if (dialogo.exec()) {
+        QStringList fileNames = dialogo.selectedFiles();
+        Dialog::crearComandos(fileNames);
+        nombreFichero = fileNames.join(" ");
+    }
+    if (!nombreFichero.isEmpty()) {
+        ui->fromLineEdit->setText(nombreFichero);
+    }
+
+    /* Esto sería para seleccionar un sólo fichero
     QString fileName =
         QFileDialog::getOpenFileName(
                 this,
@@ -138,6 +185,7 @@ void Dialog::on_fileOpenButton_clicked()
     if (!fileName.isEmpty()) {
         ui->fromLineEdit->setText(fileName);
     }
+    */
 }
 
 void Dialog::on_playInputButton_clicked()

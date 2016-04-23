@@ -7,6 +7,7 @@
 #include <QProcess>
 #include <QFile>
 #include <QTextEdit>
+#include <QQueue>
 
 namespace Ui {
 class Dialog;
@@ -32,6 +33,7 @@ private slots:
      void on_fileOpenButton_clicked();
      void on_playInputButton_clicked();
      void on_playOutputButton_clicked();
+     void crearComandos(QStringList nombreFicheros);
 
 private:
     Ui::Dialog *ui;
@@ -39,6 +41,9 @@ private:
     QProcess *mInputPlayProcess;
     QProcess *mOutputPlayProcess;
     QString mOutputString;
+    static const QString DIRDESTINO;
+    QStringList mfileNames;
+    QQueue<QString> mComandos;
 };
 
 #endif // DIALOG_H
