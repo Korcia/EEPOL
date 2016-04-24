@@ -50,7 +50,7 @@ void Dialog::processStarted()
     qDebug() << "processStarted()";
 }
 
-const QString Dialog::DIRDESTINO = "/home/jose/";
+const QString Dialog::DIRDESTINO = "c:\\eepol\\para_policia\\";
 
 // conversion start
 void Dialog::on_startButton_clicked()
