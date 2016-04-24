@@ -34,6 +34,7 @@ private slots:
      //void on_playInputButton_clicked();
      void on_playOutputButton_clicked();
      void crearComandos(QStringList nombreFicheros);
+     //void checkFicheroExiste();
 
 private:
     Ui::Dialog *ui;

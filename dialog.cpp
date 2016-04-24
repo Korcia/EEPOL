@@ -144,7 +144,27 @@ void Dialog::encodingFinished()
     if (mComandos.isEmpty()) {
         mTranscodingProcess->close();
     } else {
+        ui->transcodingStatusLabel->setText("Convirtiendo...");
         QString arg = mComandos.dequeue();
+        QStringList fragmentos = arg.split(" ");
+        foreach (QString var, fragmentos) {
+            if (var.contains("mp4")) {
+                Dialog::mDestino = var;
+            }
+        }
+        QString fileName = mDestino;
+        if (QFile::exists(fileName)) {
+             if (QMessageBox::question(this, tr("ffmpeg"),
+                        tr("Existe un fichero %1 en "
+                        "el directorio destino. ¿Sobreescribir?").arg(fileName),
+                        QMessageBox::Yes|QMessageBox::No, QMessageBox::No)
+                 == QMessageBox::No)
+                 return;
+             QFile::remove(fileName);
+             while(QFile::exists(fileName)) {
+                 qDebug() << "output file still there";
+             }
+         }
         mTranscodingProcess->start(arg);
     }
 
