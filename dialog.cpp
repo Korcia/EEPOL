@@ -12,6 +12,7 @@
 #include <QThread>
 #include <QFileInfo>
 #include <QFile>
+#include <QStringList>
 
 
 Dialog::Dialog(QWidget *parent) :
@@ -32,9 +33,6 @@ Dialog::Dialog(QWidget *parent) :
     mTranscodingProcess = new QProcess(this);
     mInputPlayProcess = new QProcess(this);
     mOutputPlayProcess = new QProcess(this);
-
-    //Creo 4 procesos más en caso de necesitarlos
-    //mTranscodingProcess2 = new QProcess(this);
 
     connect(mTranscodingProcess, SIGNAL(started()), this, SLOT(processStarted()));
 
@@ -60,16 +58,29 @@ void Dialog::on_startButton_clicked()
     //QString program = "C:/FFmpeg/bin/ffmpeg";
     QString program = "/usr/bin/ffmpeg";
 
-    QStringList arguments;
+    //QStringList arguments;
     QString arg;
 
-    QString input = ui->fromLineEdit->text();
-    if(input.isEmpty()) {
-        qDebug() << "No input";
-        QMessageBox::information(this,
-                     tr("ffmpeg"),tr("Input file not specified"));
-        return;
+    if (!mComandos.isEmpty()) {
+        arg = mComandos.dequeue();
+        QStringList fragmentos = arg.split(" ");
+        foreach (QString var, fragmentos) {
+            //qDebug() << "var en el foreach: " << var;
+            if (var.contains("mp4")) {
+                //qDebug() << "var que si contiene mp4: " << var;
+                Dialog::mDestino = var;
+            }
+        }
     }
+
+
+//    QString input = ui->fromLineEdit->text();
+//    if(input.isEmpty()) {
+//        qDebug() << "No input";
+//        QMessageBox::information(this,
+//                     tr("ffmpeg"),tr("Input file not specified"));
+//        return;
+//    }
     /*QString output = ui->toLineEdit->text();
     if(output.isEmpty()) {
         qDebug() << "No output";
@@ -78,9 +89,10 @@ void Dialog::on_startButton_clicked()
         return;
     }*/
 
-    QString fileName = ui->toLineEdit->text();
-    qDebug() << "output file check " << fileName;
-    qDebug() << "QFile::exists(fileName) = " << QFile::exists(fileName);
+    //QString fileName = ui->toLineEdit->text();
+    QString fileName = mDestino;
+    //qDebug() << "compruebo fichero destino " << fileName;
+    //qDebug() << "QFile::exists(fileName) = " << QFile::exists(fileName);
     if (QFile::exists(fileName)) {
          if (QMessageBox::question(this, tr("ffmpeg"),
                     tr("Existe un fichero %1 en "
@@ -96,9 +108,6 @@ void Dialog::on_startButton_clicked()
 
     //qDebug() << argumentos;
 
-    if (!mComandos.isEmpty()) {
-        arg = mComandos.dequeue();
-    }
 
     mTranscodingProcess->setProcessChannelMode(QProcess::MergedChannels);
     mTranscodingProcess->start(arg);
@@ -117,13 +126,14 @@ void Dialog::readyReadStandardOutput()
 
 void Dialog::encodingFinished()
 {
-    // Resultado del proceso by checking output file's existence
-    QString fileName = ui->toLineEdit->text();
+    // Resultado del proceso comprobando la existencia del fichero destino
+    //QString fileName = ui->toLineEdit->text();
+    //qDebug() << "Ruta destino: " << Dialog::mDestino;
 
-    if (QFile::exists(fileName)) {
+    if (QFile::exists(Dialog::mDestino)) {
         ui->transcodingStatusLabel
                 ->setText("Resultado Conversión: OK!");
-        ui->transcodingStatusLabel->setStyleSheet("QLabel { background-color : red; color : blue; }");
+        ui->transcodingStatusLabel->setStyleSheet("QLabel { background-color : yellow; color : red; }");
         ui->playOutputButton->setEnabled(true);
     }
     else {
@@ -152,7 +162,7 @@ void Dialog::crearComandos(QStringList nombreFicheros)
         info.setCaching(false);
         QString base = info.completeBaseName();
         base.replace(" ", "_");
-        qDebug() << "Nombre de origen del fichero " << origen;
+        //qDebug() << "Nombre de origen del fichero " << origen;
         //delete info;
         QString tmp1 = "ffmpeg -f h264 -i ";
         QString tmp2 = tmp1 + origen;

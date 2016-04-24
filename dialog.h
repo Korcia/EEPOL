@@ -42,6 +42,7 @@ private:
     QProcess *mOutputPlayProcess;
     QString mOutputString;
     static const QString DIRDESTINO;
+    QString mDestino;
     QStringList mfileNames;
     QQueue<QString> mComandos;
 };
